@@ -34,7 +34,6 @@ LogAndDisplay Log("DataRefresheR.log");
 FileTools ft(Log);
 
 
-
 int main(int argc, char** argv) {
 	
 	signal(SIGINT, catch_int);

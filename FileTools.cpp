@@ -12,15 +12,11 @@
 #include <thread>
 
 
-
-//  LogAndDisplay Log("log.txt");
-
 FileTools::FileTools(LogAndDisplay &Log) {
     this->buffer_size=1024 * 1024 * 128;  //default: 128 MB
     this->min_file_age = 730;	// default: 730 days
     lptr=&Log;
 }
-
 
 
 #define PBSTR "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
@@ -89,9 +85,8 @@ bool FileTools::RefreshFile(const std::filesystem::directory_entry &entry) {
     bool compare_result=false;
 
 
-    //  if(entry.is_regular_file() && CheckIfFileIsOlderThan(entry,this->min_file_age)) {
-    if(entry.is_regular_file()) {
-
+      if(entry.is_regular_file() && CheckIfFileIsOlderThan(entry,this->min_file_age)) {
+    //if(entry.is_regular_file()) {
         const char *path_str = entry.path().c_str();
         std::string s(path_str);
 
