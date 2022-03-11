@@ -20,14 +20,16 @@ class FileTools {
         bool ResolveOrphanedTemp(const std::filesystem::directory_entry &entry);
         bool CheckIfFileIsOlderThan(const std::filesystem::directory_entry &entry, const unsigned int days);
         void SetMinFileAge(const unsigned int &min_file_age);
-        void inline SetBufferSize(const unsigned int &buffer_size);
+        void SetBufferSize(const unsigned int &buffer_size);
         void print_checksum(std::vector<unsigned char> checksum);
         unsigned int GetMinFileAge();
+        void printProgress(double &percentage);
 
     private:
 		long buffer_size;
 		unsigned int min_file_age;
 		LogAndDisplay *lptr;
+		
 		
 };
 #endif

@@ -2,23 +2,42 @@
 #include "LogAndDisplay.h"
 #include "FileTools.h"
 #include "CmdTools.h"
+#include <signal.h>
+#include <thread>
+#include <chrono>
 
 
 #define RECURSIVE "-R"
 #define DRY_RUN "-d"
 #define OLDER_THAN "-o"
+#define BUFFER_SIZE "-b"
+#define MISSING_PATH "Error: Missing path"
+#define PATH_D "Error: The path doesn't exist. Path: "
+#define EXITING "Exiting... \n"
+#define USAGE  "\nUsage: \n\tDataRefresher /path/to/directory/ [Options]\n\nOptions:\n\t -R - recursive\n" \
+"\t -o (n) - Process only files older than (n) days. Default: 730 days.\n" \
+"\t -b (n) - Buffer size in Megabytes. Default: 128 MB \n" \
+"Example: \n\t DataRefresher /path/to/directory/ -R -o 365 \n" 
+
 
 //static
-static std::vector<std::string> available_options= {"-R","-d","-o"};
+static std::vector<std::string> available_options= {"-R","-d","-o","-b"};
+bool stop = false;
+
+
+// function declarations
+void catch_int(int sig_num);
 
 
 // objects
-LogAndDisplay Log("log.txt");
+LogAndDisplay Log("DataRefresheR.log");
 FileTools ft(Log);
 
 
 
 int main(int argc, char** argv) {
+	
+	signal(SIGINT, catch_int);
 
     CmdTools ct(available_options, argc, argv);
 
@@ -26,22 +45,23 @@ int main(int argc, char** argv) {
 
 		std::string s = std::get<1>(ct.CheckIfOptionIsSet(OLDER_THAN));
         ft.SetMinFileAge(stoi(s));
-        //std::cout << std::get<1>(ct.CheckIfOptionIsSet(OLDER_THAN)) << "\n";
+    }
+    
+        if(std::get<0>(ct.CheckIfOptionIsSet(BUFFER_SIZE))) {
+
+		std::string s = std::get<1>(ct.CheckIfOptionIsSet(BUFFER_SIZE));
+        ft.SetBufferSize(stoi(s)*1024*1024);
     }
 
-
     std::string path;
-    static const std::string usage_helper =
-        "\n Usage: \n DataRefresher /path/to/directory/ [Options]\n\n Options:\n -R - recursive\n"
-        " -d - dry run";
     bool error=false;
 
     if(argv[1]) {
         path = argv[1];
 
     } else {
-        Log.log("Missing path","both");
-        std::cout << usage_helper;
+        Log.log(MISSING_PATH,"both");
+        std::cout << USAGE;
         error=true;
         return EXIT_FAILURE;
     }
@@ -49,8 +69,8 @@ int main(int argc, char** argv) {
 
     if(!error) {
         if(! ft.CheckifDirExists(&path[0])) {
-            Log.log("The path doesn't exist: "+path,"both");
-            std::cout << usage_helper;
+            Log.log(PATH_D+path,"both");
+            std::cout << USAGE;
             error = true;
             return EXIT_FAILURE;
         }
@@ -62,24 +82,33 @@ int main(int argc, char** argv) {
 
         for (const auto &entry : std::filesystem::directory_iterator(path)) {
             ft.ResolveOrphanedTemp(entry);
+            if(stop) { break;}
         }
         for (const auto &entry : std::filesystem::directory_iterator(path)) {
             ft.RefreshFile(entry);
+            if(stop) { break;}
         }
     } else {
 
         for (const auto &entry : std::filesystem::recursive_directory_iterator(path)) {
-
                 ft.ResolveOrphanedTemp(entry);
+                if(stop) { break;}
             }
 
             for (const auto &entry : std::filesystem::directory_iterator(path)) {
                 ft.RefreshFile(entry);
+                if(stop) { break;}
             }
         }
     }
     
 
+void catch_int(int sig_num)
+{
+    printf(EXITING);
+    fflush(stdout);
+    stop = true;
+}
 
 
 

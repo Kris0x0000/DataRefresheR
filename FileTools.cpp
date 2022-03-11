@@ -9,6 +9,8 @@
 #include "LogAndDisplay.h"
 #include <ctime>
 #include <chrono>
+#include <thread>
+
 
 
 //  LogAndDisplay Log("log.txt");
@@ -20,6 +22,21 @@ FileTools::FileTools(LogAndDisplay &Log) {
 }
 
 
+
+#define PBSTR "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
+#define PBWIDTH 60
+
+void FileTools::printProgress(double &frac_of_one) {
+
+    int val = (int) (frac_of_one * 100);
+    int lpad = (int) ((frac_of_one) * PBWIDTH);
+    int rpad = PBWIDTH - lpad;
+    printf("\r%3d%% [%.*s%*s]", val, lpad, PBSTR, rpad, "");
+    fflush(stdout);
+
+}
+
+
 void FileTools::SetMinFileAge(const unsigned int &min_file_age) {
     this->min_file_age = min_file_age;
 }
@@ -28,7 +45,7 @@ unsigned int FileTools::GetMinFileAge() {
     return this->min_file_age;
 }
 
-void inline FileTools::SetBufferSize(const unsigned int &buffer_size) {
+void FileTools::SetBufferSize(const unsigned int &buffer_size) {
     this->buffer_size = buffer_size;
 }
 
@@ -72,7 +89,8 @@ bool FileTools::RefreshFile(const std::filesystem::directory_entry &entry) {
     bool compare_result=false;
 
 
-    if(entry.is_regular_file() && CheckIfFileIsOlderThan(entry,this->min_file_age)) {
+    //  if(entry.is_regular_file() && CheckIfFileIsOlderThan(entry,this->min_file_age)) {
+    if(entry.is_regular_file()) {
 
         const char *path_str = entry.path().c_str();
         std::string s(path_str);
@@ -255,7 +273,12 @@ std::vector<unsigned char> FileTools::CopyFile(const char *filename) {
     char *buffer=new char[buffer_size];
     unsigned int size_left = size;
 
+    double frac_of_one = (1.0-(double(size_left))/double(size));
+
     while(ifb->sgetn(buffer,buffer_size)) {
+
+        frac_of_one = (1.0-(double(size_left))/double(size));
+        printProgress(frac_of_one);
 
         if(size_left > buffer_size) {
             size_left = size_left - buffer_size;
@@ -271,6 +294,11 @@ std::vector<unsigned char> FileTools::CopyFile(const char *filename) {
         delete[] buffer;
         buffer=new char[buffer_size];
     }
+    frac_of_one = 1;
+    printProgress(frac_of_one);
+    std::cout << "\n\n";
+    // t1.join();
+
 
     SHA1_Final(digest, &shactx);
     ifb->close();
