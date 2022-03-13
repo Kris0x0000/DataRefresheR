@@ -10,17 +10,22 @@
 #include <ctime>
 #include <chrono>
 #include <thread>
+#include <future>
+
+
+#define TEMP_EXTENSION ".temp"
+#define BUFFER_MB 128
+#define MIN_FILE_AGE 730
+#define PBSTR "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
+#define PBWIDTH 60
 
 
 FileTools::FileTools(LogAndDisplay &Log) {
-    this->buffer_size=1024 * 1024 * 128;  //default: 128 MB
-    this->min_file_age = 730;	// default: 730 days
+    this->buffer_size=1024 * 1024 * BUFFER_MB;  //default: 128 MB
+    this->min_file_age = MIN_FILE_AGE;	// default: 730 days
     lptr=&Log;
 }
 
-
-#define PBSTR "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
-#define PBWIDTH 60
 
 void FileTools::printProgress(double &frac_of_one) {
 
@@ -29,7 +34,6 @@ void FileTools::printProgress(double &frac_of_one) {
     int rpad = PBWIDTH - lpad;
     printf("\r%3d%% [%.*s%*s]", val, lpad, PBSTR, rpad, "");
     fflush(stdout);
-
 }
 
 
@@ -54,7 +58,7 @@ bool FileTools::ResolveOrphanedTemp(const std::filesystem::directory_entry &entr
 
         const char *path_str = entry.path().c_str();
         std::string s(path_str);
-        std::regex self_regex(".{1,}\\.temp");
+        std::regex self_regex(".{1,}\\" TEMP_EXTENSION);
 
         if (std::regex_search(path_str, self_regex)) {
             std::string ofn = FilenameToNormal(path_str);
@@ -85,13 +89,14 @@ bool FileTools::RefreshFile(const std::filesystem::directory_entry &entry) {
     bool compare_result=false;
 
 
-      if(entry.is_regular_file() && CheckIfFileIsOlderThan(entry,this->min_file_age)) {
-    //if(entry.is_regular_file()) {
+    if(entry.is_regular_file() && CheckIfFileIsOlderThan(entry,this->min_file_age)) {
+        //if(entry.is_regular_file()) {
         const char *path_str = entry.path().c_str();
         std::string s(path_str);
 
-        lptr->log("Start processing filee: " + s,"both");
+        lptr->log("Start processing file: " + s,"both");
         lptr->log("Copying file "+s,"both");
+
         checksum1 = this->CopyFile(path_str);
         checksum2 = FileTools::ReadFile(&FileTools::FilenameToTemp(path_str)[0]);
 
@@ -125,7 +130,8 @@ bool FileTools::RefreshFile(const std::filesystem::directory_entry &entry) {
         }
     }
     return(!error);
-} // for
+}
+
 
 
 bool FileTools::CheckIfFileIsOlderThan
@@ -137,7 +143,6 @@ bool FileTools::CheckIfFileIsOlderThan
     std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::milliseconds>(now - m_time);
 
     if(time_span > delta_millis) {
-        //std::cout << "true";
         return true;
     } else {
         return false;
@@ -149,10 +154,10 @@ bool FileTools::RenameFileToNormal(const char *filename) {
 
     bool error = false;
     std::string s = filename;
-    std::string r = ".temp";
+    std::string r = TEMP_EXTENSION;
     std::string::size_type pos = s.find(r);
     s.erase(pos,r.length());
-    //rename(filename, s.c_str());
+
     if (rename(filename, s.c_str()) != 0) {
         error=true;
     }
@@ -161,6 +166,7 @@ bool FileTools::RenameFileToNormal(const char *filename) {
 
 
 bool FileTools::CheckifFileExists(const char *filename) {
+
     bool result = false;
     if(std::filesystem::exists(filename)) {
         if(std::filesystem::is_regular_file(filename)) {
@@ -189,9 +195,7 @@ bool FileTools::CompareChecksums
 
     bool result = true;
     for(int i=0; i<SHA_DIGEST_LENGTH; i++) {
-
         if(checksum1[i] != checksum2[i]) {
-
             result = false;
             break;
         }
@@ -246,7 +250,7 @@ std::vector<unsigned char> FileTools::CopyFile(const char *filename) {
     std::ofstream ofs;
 
     ifs.open (filename, std::ifstream::binary);
-    std::string total = std::string(filename) + std::string(".temp");
+    std::string total = std::string(filename) + std::string(TEMP_EXTENSION);
 
     ofs.open (total, std::ofstream::binary);
 
@@ -272,9 +276,6 @@ std::vector<unsigned char> FileTools::CopyFile(const char *filename) {
 
     while(ifb->sgetn(buffer,buffer_size)) {
 
-        frac_of_one = (1.0-(double(size_left))/double(size));
-        printProgress(frac_of_one);
-
         if(size_left > buffer_size) {
             size_left = size_left - buffer_size;
 
@@ -286,14 +287,17 @@ std::vector<unsigned char> FileTools::CopyFile(const char *filename) {
             SHA1_Update(&shactx, buffer, size_left);
         }
 
+        ofs.flush();
+        frac_of_one = (1.0-(double(size_left))/double(size));
+        printProgress(frac_of_one);
+
         delete[] buffer;
         buffer=new char[buffer_size];
     }
-    frac_of_one = 1;
+
+    frac_of_one = 1.0;
     printProgress(frac_of_one);
     std::cout << "\n\n";
-    // t1.join();
-
 
     SHA1_Final(digest, &shactx);
     ifb->close();
@@ -308,14 +312,14 @@ std::vector<unsigned char> FileTools::CopyFile(const char *filename) {
 
 std::string FileTools::FilenameToTemp(const char *filename) {
 
-    std::string total = std::string(filename) + std::string(".temp");
+    std::string total = std::string(filename) + std::string(TEMP_EXTENSION);
     return total;
 }
 
 std::string FileTools::FilenameToNormal(const char *filename) {
 
     std::string s = filename;
-    std::string r = ".temp";
+    std::string r = TEMP_EXTENSION;
     std::string::size_type pos = s.find(r);
     s.erase(pos,r.length());
     return s;

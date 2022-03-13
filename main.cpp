@@ -7,6 +7,7 @@
 #include <chrono>
 
 
+
 #define RECURSIVE "-R"
 #define DRY_RUN "-d"
 #define OLDER_THAN "-o"
@@ -18,6 +19,7 @@
 "\t -o (n) - Process only files older than (n) days. Default: 730 days.\n" \
 "\t -b (n) - Buffer size in Megabytes. Default: 128 MB \n" \
 "Example: \n\t DataRefresher /path/to/directory/ -R -o 365 \n" 
+#define LOG_FILE "DataRefresheR.log"
 
 
 //static
@@ -30,7 +32,7 @@ void catch_int(int sig_num);
 
 
 // objects
-LogAndDisplay Log("DataRefresheR.log");
+LogAndDisplay Log(LOG_FILE);
 FileTools ft(Log);
 
 
@@ -75,6 +77,9 @@ int main(int argc, char** argv) {
         }
     }
 
+	if(std::filesystem::is_empty(path)) {
+		std::cout << "No files found...";
+	}
 
 
     if(!std::get<0>(ct.CheckIfOptionIsSet(RECURSIVE))) {
@@ -89,7 +94,7 @@ int main(int argc, char** argv) {
         }
     } else {
 
-        for (const auto &entry : std::filesystem::recursive_directory_iterator(path)) {
+			for (const auto &entry : std::filesystem::recursive_directory_iterator(path)) {
                 ft.ResolveOrphanedTemp(entry);
                 if(stop) { break;}
             }
