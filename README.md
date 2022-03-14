@@ -5,7 +5,7 @@ This program is designed to alleviate the bit rot data corruption by periodic re
 
 ## Precautions
 It is strongly recommended to run this program only on a computer with ECC (Error Correction Code) RAM. Running this program
-on a non-ECC platform may be counterproductive. If you don't understand this read more about bit rot nature before proceed. Be warned.
+on a non-ECC platform may be counterproductive. If you don't understand this please read more about bit rot nature before proceed. Be warned.
 
 I have made every effort to make this program useful, bug-free and safe, however I do not take any responsibility for any potential loss
 or damage caused by it.
