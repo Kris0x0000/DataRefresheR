@@ -12,7 +12,7 @@ or damage caused by it.
 
 
 ## Usage
-DataRefresher /path/to/directory/ [Options]
+	DataRefresher /path/to/directory/ [Options]
 
 ## Options
 
@@ -21,4 +21,4 @@ DataRefresher /path/to/directory/ [Options]
 	 -b (n) - Buffer size in Megabytes. Default: 128 MB 
 	 
 ## Example
-DataRefresher /path/to/directory/ -R -o 365 
+	DataRefresher /path/to/directory/ -R -o 365 
