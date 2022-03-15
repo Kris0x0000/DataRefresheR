@@ -5,16 +5,7 @@ This program is designed to alleviate the bit rot data corruption by periodic re
 
 ## Precautions
 It is strongly recommended to run this program only on a computer with ECC (Error Correction Code) RAM. Running this program
-<<<<<<< HEAD
 on a non-ECC platform may be counterproductive. If you don't understand this read more about bit rot nature before proceed. Be warned.
-I have made every effort to make this program useful, bug-free and safe, however I do not take any responsibility for any potential loss
-or damage caused by it.
-
-
-## Usage
-DataRefresher /path/to/directory/ [Options]
-=======
-on a non-ECC platform may be counterproductive. If you don't understand this please read more about bit rot nature before proceed. Be warned.
 
 I have made every effort to make this program useful, bug-free and safe, however I do not take any responsibility for any potential loss
 or damage caused by it.
@@ -29,7 +20,6 @@ or damage caused by it.
 
 ## Usage
 	DataRefresher /path/to/directory/ [Options]
->>>>>>> 43cc51281b8715c4bcf17376722193521ce0be15
 
 ## Options
 
@@ -38,9 +28,4 @@ or damage caused by it.
 	 -b (n) - Buffer size in Megabytes. Default: 128 MB 
 	 
 ## Example
-<<<<<<< HEAD
-DataRefresher /path/to/directory/ -R -o 365 
-
-=======
 	DataRefresher /path/to/directory/ -R -o 365 
->>>>>>> 43cc51281b8715c4bcf17376722193521ce0be15
