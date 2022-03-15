@@ -17,6 +17,5 @@ class CmdTools {
         int argc;
         char **argv;
         std::vector<std::string> available_options;
-
 };
 #endif

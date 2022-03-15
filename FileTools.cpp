@@ -7,10 +7,7 @@
 #include <regex>
 #include "FileTools.h"
 #include "LogAndDisplay.h"
-#include <ctime>
 #include <chrono>
-#include <thread>
-#include <future>
 
 
 #define TEMP_EXTENSION ".temp"
@@ -87,7 +84,6 @@ bool FileTools::RefreshFile(const std::filesystem::directory_entry &entry) {
     std::vector<unsigned char> checksum1;
     std::vector<unsigned char> checksum2;
     bool compare_result=false;
-
 
     if(entry.is_regular_file() && CheckIfFileIsOlderThan(entry,this->min_file_age)) {
         //if(entry.is_regular_file()) {
